@@ -32,7 +32,7 @@ runs:
         echo "${{ inputs.name }} computed hash is $COMPUTED_HASH"
         if [[ "$COMPUTED_HASH" != "$EXPECTED_HASH" ]]; then
             echo "${{ inputs.name }} hash do not match"
-            #exit -2
+            exit -2
         fi
 
     - name: Build tool contaniner
