@@ -54,6 +54,6 @@ Below is a sample of command used to verify.
 Replace the big quotes part with yours.
 
 ```plugins
-go run ./cli/slsa-verifier verify-artifact "artifact binary name(e.g xxxx.whl)" --provenance-path "provenance path(e.g xxx.intoto.jsonl)" --source-uri "git+https://your repository" --builder-id https://github.com/Samsung/SupplyChainAssurance/.github/workflows/slsa_release.yml@v1.0.0
+go run ./cli/slsa-verifier verify-artifact "artifact binary name(e.g xxxx.whl)" --provenance-path "provenance path(e.g xxx.intoto.jsonl)" --source-uri "git+https://your repository" --builder-id https://github.com/samsung/supplychainassurance/.github/workflows/slsa_release.yml@v1.0.0
 ```
 
