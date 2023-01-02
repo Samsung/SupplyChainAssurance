@@ -1,0 +1,46 @@
+name: "Download scia_tool"
+inputs:
+  name :
+    description: "The name of tool to download"
+    required: true
+
+  token:
+    description: "Token to access ecode github"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Download tool
+      shell: bash
+      run : |
+        set -euo pipefail
+        git clone https://${{ inputs.token }}@github.ecodesamsung.com/CRTM/scia_tool
+        cd scia_tool/${{ inputs.name }} && git lfs pull --include ${{ inputs.name }} 
+
+    - name: Verify tool
+      shell: bash
+      run : |
+        if [[ "${{ inputs.name }}" == "generator" ]]; then
+          EXPECTED_HASH="65da69430868b717448483cb0636f3d967481f3dad74957cae31236b5d83ddf9"
+        elif [[ "${{ inputs.name }}" == "verifier" ]]; then
+          EXPECTED_HASH="1606ebe7ba8ebbfd07849f0bc900c98b5f6bde4cb3b19b57eb7c98c8982476b4"
+        fi
+        COMPUTED_HASH=$(sha256sum scia_tool/${{ inputs.name }}/${{ inputs.name }} | awk '{print $1}')
+        set -euo pipefail
+        echo "${{ inputs.name }} expected hash is $EXPECTED_HASH"
+        echo "${{ inputs.name }} computed hash is $COMPUTED_HASH"
+        if [[ "$COMPUTED_HASH" != "$EXPECTED_HASH" ]]; then
+            echo "${{ inputs.name }} hash do not match"
+            #exit -2
+        fi
+
+    - name: Build tool contaniner
+      shell: bash
+      env :
+        GITHUB_CONTEXT: "${{ toJSON(github) }}"
+      run : |
+        set -euo pipefail
+        docker build --build-arg GITHUB_CONTEXT="${GITHUB_CONTEXT}" -t scia:${{ inputs.name }} scia_tool/${{ inputs.name }}
+        rm -rf scia_tool
+

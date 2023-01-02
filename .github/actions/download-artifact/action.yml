@@ -1,0 +1,37 @@
+name: "Download artifact"
+inputs:
+  hash :
+    description: "The name:hash of file to download"
+    required: true
+outputs:
+  outdir :
+    description: "The output directory name"
+    value: ${{ steps.verify.outputs.outdir }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Download Artifact
+      uses: actions/download-artifact@v3
+
+    - name: Verify Artifact
+      shell: bash
+      id: verify
+      run : |
+        SUBJECTS=$(echo ${{ inputs.hash }} | base64 -d)
+        echo $SUBJECTS
+        for sub in $SUBJECTS
+        do
+                NAME=$(echo $sub | awk '{split($1,data,":"); ;print data[1]}')
+                EXPECTED_HASH=$(echo $sub | awk '{split($1,data,":"); ;print data[2]}')
+                COMPUTED_HASH=$(sha256sum artifact/$NAME | awk {'print $1'})
+                echo "Expected hash is " $EXPECTED_HASH
+                echo "Computed hash is " $COMPUTED_HASH
+
+                if [[ "$COMPUTED_HASH" != "$EXPECTED_HASH" ]]; then
+                        echo "Hash do not  match"
+                        exit -2
+                fi
+        done
+        echo "outdir=artifact" >> $GITHUB_OUTPUT
+

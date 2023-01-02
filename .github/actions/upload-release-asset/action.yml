@@ -1,0 +1,41 @@
+name: "Upload release asset"
+inputs:
+  artifacts :
+    description: "The list of artifacts will be uploaded"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+  - uses: actions/checkout@v3
+
+  - name: Download Artifact
+    uses: actions/download-artifact@v3
+
+  - name: Verify Artifact and Upload
+    shell: bash
+    env:
+      GITHUB_TOKEN: ${{ env.GITHUBTOKEN }}
+    run : |
+      SUBJECTS=$(echo ${{ inputs.artifacts}} | base64 -d)
+      echo $SUBJECTS
+      echo $GITHUB_TOKEN
+      assets=()
+      for sub in $SUBJECTS
+      do
+        NAME=$(echo $sub | awk '{split($1,data,":"); ;print data[1]}')
+        EXPECTED_HASH=$(echo $sub | awk '{split($1,data,":"); ;print data[2]}')
+        COMPUTED_HASH=$(sha256sum artifact/$NAME | awk {'print $1'})
+        echo "Expected hash is " $EXPECTED_HASH
+        echo "Computed hash is " $COMPUTED_HASH
+        if [[ "$COMPUTED_HASH" != "$EXPECTED_HASH" ]]; then
+          echo "Hash do not  match"
+          exit -2
+        fi
+        assets+=("-a" "artifact/$NAME")
+      done
+
+      tag_name=${GITHUB_REF##*/}
+      echo "$tag_name"
+      echo "${assets[@]}"
+      hub release edit "${assets[@]}" -m "" "$tag_name"

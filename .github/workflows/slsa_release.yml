@@ -1,0 +1,120 @@
+name: Release by SLSA
+
+on:
+  workflow_call:
+    inputs:
+      artifact:
+        description: "Generate artifacts after build"
+        required: true
+        type: string
+      hash:
+        description: "hash of artifacts"
+        required: true
+        type: string
+      build_cmd:
+        description: "Build command"
+        required: true
+        type: string
+    secrets:
+      EXPECTED_REPOSITORY:
+        required: true
+      ECODETOKEN:
+        required: true
+    outputs:
+      artifacts:
+        description: "The asset of release"
+        value: ${{ jobs.GenerateProvenance.outputs.hash }}
+
+jobs:
+  GenerateProvenance:
+    outputs:
+      hash: ${{ steps.genProvenance.outputs.hash }}
+      artifact: ${{ steps.genProvenance.outputs.artifact }}
+
+    permissions:
+      id-token: write # Needed to detect the current reusable repository and ref.
+      contents: write
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Download Artifact
+      uses: samsung/supplychainassurance/.github/actions/download-artifact@v1.0.0
+      id: download
+      with:
+        hash: ${{ inputs.hash }}
+
+    - name: Download Generator
+      uses: samsung/supplychainassurance/.github/actions/download-tool@v1.0.0
+      with:
+        name : "generator"
+        token: "${{ secrets.ECODETOKEN }}"
+
+    - name: Generate Provenance
+      id: genProvenance
+      env :
+        WORKSPACE: "/workspace"
+
+      run : |
+        OUTDIR=${{ steps.download.outputs.outdir }}
+        VOLUMECMD="-v ${{ github.workspace }}:$WORKSPACE"
+        ENVCMD="-e ACTIONS_ID_TOKEN_REQUEST_URL=$ACTIONS_ID_TOKEN_REQUEST_URL -e ACTIONS_ID_TOKEN_REQUEST_TOKEN=$ACTIONS_ID_TOKEN_REQUEST_TOKEN"
+        docker run $VOLUMECMD $ENVCMD scia:generator generate -o "$WORKSPACE/$OUTDIR" -t "$WORKSPACE" -s "fulcio" --subjects "${{ inputs.hash }}" --pkgname "${{ github.event.repository.name }}" --build-command "${{ inputs.build_cmd }}"
+
+        ARTIFACT=$(ls $OUTDIR/*.intoto.jsonl | awk '{split($1,name,"/"); ;print name[2]}')
+        HASH=$((sha256sum $OUTDIR/* | awk '{split($2,name,"/"); ;print name[2]":"$1}') | base64 -w0)
+        echo "hash=$HASH" >> $GITHUB_OUTPUT
+        echo "outdir=$OUTDIR" >> $GITHUB_OUTPUT
+        echo "artifact=$ARTIFACT" >> $GITHUB_OUTPUT
+
+    - name: Upload Provenance
+      uses: actions/upload-artifact@v3
+      with:
+        path: |
+          ${{ steps.genProvenance.outputs.outdir }}/*
+
+############# Upload Artifacts ##########################
+
+  Verify_Provenance:
+    runs-on: ubuntu-latest
+
+    needs: [ GenerateProvenance ]
+    steps:
+    - name: Download Artifact
+      id: download
+      uses: samsung/supplychainassurance/.github/actions/download-artifact@v1.0.0
+      with:
+        hash: ${{ needs.GenerateProvenance.outputs.hash }}
+
+    - name: Download Verifier
+      uses: samsung/supplychainassurance/.github/actions/download-tool@v1.0.0
+      with:
+        name : "verifier"
+        token: "${{ secrets.ECODETOKEN }}"
+
+    - name: Verify Provenance and Subjects
+      env:
+        WORKSPACE: "/workspace"
+
+      run : |
+        EXPECTED_BUILDERID="https://github.com/samsung/supplychainassurance/.github/workflows/slsa_release.yml@refs/tags/v1.0.0"
+        VOLUMECMD="-v ${{ github.workspace }}/${{ steps.download.outputs.outdir }}:$WORKSPACE"
+        ENVCMD="-e WORKSPACE=$WORKSPACE"
+        DATAS=$(echo "repository:${{ secrets.EXPECTED_REPOSITORY }} builderid:$EXPECTED_BUILDERID" | base64 -w0)
+        docker run $VOLUMECMD $ENVCMD scia:verifier -t ${{ needs.GenerateProvenance.outputs.artifact }} -z "${{ inputs.artifact }}" -x $WORKSPACE --verifier-level "data-check" --verifier "sigstore" --save-history=false --verify-datas $DATAS
+        cat ${{ steps.download.outputs.outdir }}/scia-progress.json
+
+    - name: Download Uploader
+      uses: samsung/supplychainassurance/.github/actions/download-tool@v1.0.0
+      with:
+        name : "generator"
+        token: "${{ secrets.ECODETOKEN }}"
+
+    - name: Upload Artifacts into Server
+      env:
+        WORKSPACE: "/workspace"
+      run : |
+        VOLUMECMD="-v ${{ github.workspace }}/${{ steps.download.outputs.outdir }}:$WORKSPACE"
+        ENVCMD="-e WORKSPACE=$WORKSPACE -e REPOSITORY=$EXPECTED_REPOSITORY"
+        docker run $VOLUMECMD $ENVCMD scia:generator upload --server "rekor" --provenance "${{ needs.GenerateProvenance.outputs.artifact }}"
