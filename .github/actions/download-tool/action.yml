@@ -22,7 +22,7 @@ runs:
       shell: bash
       run : |
         if [[ "${{ inputs.name }}" == "generator" ]]; then
-          EXPECTED_HASH="eb22de76840a98200d24cb404601be33b37ca3caa78d3ee8fa37550bd64f77eb"
+          EXPECTED_HASH="499006e9ab98b68ed539fd8428a4defb5ac0d2cc490e756e6e45f706e7f5d698"
         elif [[ "${{ inputs.name }}" == "verifier" ]]; then
           EXPECTED_HASH="b59cb7078db3201bb54a2a041fd0d2fdc74c95dd5851187031dc46c271e76525"
         fi
