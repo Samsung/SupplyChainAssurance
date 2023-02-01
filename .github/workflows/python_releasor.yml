@@ -72,7 +72,7 @@ jobs:
     permissions:
       id-token: write
       contents: write
-    uses: samsung/supplychainassurance/.github/workflows/slsa_release.yml@v1.0.0
+    uses: samsung/supplychainassurance/.github/workflows/slsa_release.yml@change-generator
     with:
       hash: "${{ needs.Builder.outputs.hash }}"
       artifact: "${{ needs.Builder.outputs.artifact }}"
@@ -87,7 +87,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Upload Release Asset
-      uses: samsung/supplychainassurance/.github/actions/upload-release-asset@v1.0.0
+      uses: samsung/supplychainassurance/.github/actions/upload-release-asset@change-generator
       env:
         GITHUBTOKEN: ${{ secrets.GITHUBTOKEN }}
       with:

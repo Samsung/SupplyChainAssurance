@@ -15,14 +15,14 @@ runs:
       shell: bash
       run : |
         set -euo pipefail
-        git clone https://${{ inputs.token }}@github.ecodesamsung.com/CRTM/scia_tool
+        git clone -b dev-jiin https://${{ inputs.token }}@github.ecodesamsung.com/CRTM/scia_tool
         cd scia_tool/${{ inputs.name }} && git lfs pull --include ${{ inputs.name }} 
 
     - name: Verify tool
       shell: bash
       run : |
         if [[ "${{ inputs.name }}" == "generator" ]]; then
-          EXPECTED_HASH="1ba98d3aa6d960918565226e3ec5a31215864f6c19025691fe0b4cf82a608d42"
+          EXPECTED_HASH="523931948de3993c6943055b3d180d541ce9fed224a66436607b6d5f2610325f"
         elif [[ "${{ inputs.name }}" == "verifier" ]]; then
           EXPECTED_HASH="1606ebe7ba8ebbfd07849f0bc900c98b5f6bde4cb3b19b57eb7c98c8982476b4"
         fi
