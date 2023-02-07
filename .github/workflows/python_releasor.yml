@@ -26,46 +26,10 @@ on:
 
 jobs:
   Builder:
-    outputs:
-      hash: ${{ steps.build.outputs.hash }}
-      artifact: ${{ steps.build.outputs.artifact }} 
-      build_command: ${{ steps.build.outputs.build_command }}
-
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v3
-      with:
-        ref: ${{ github.event.pull_request.head.sha }}
-
-    - name: Set up Python
-      uses: actions/setup-python@v3
-      with:
-        python-version: "${{ inputs.version }}"
-
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install build
-
-    - name: Build
-      id: build
-      env:
-        CMD : python -m build
-      run: |
-        $CMD
-        HASH=$((sha256sum dist/* | awk '{split($2,name,"/"); ;print name[2]":"$1}') | base64 -w0)
-        ARTIFACT=$(ls dist/* | awk '{split($1,name,"/"); printf("%s ",name[2]);}')
-
-        echo "build_command=$CMD" >> $GITHUB_OUTPUT
-        echo "hash=$HASH" >> $GITHUB_OUTPUT
-        echo "artifact=$ARTIFACT" >> $GITHUB_OUTPUT
-
-    - name: Upload Artifact
-      uses: actions/upload-artifact@v3
-      with:
-        path: |
-          dist/*
+    uses: samsung/supplychainassurance/.github/workflows/python_builder.yml@v1.0.1
+    with:
+      version: "${{ inputs.version }}"
+      upload: true
 
   SLSA_Release:
     needs: [ Builder ]
