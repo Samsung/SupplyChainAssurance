@@ -8,7 +8,7 @@ on:
       upload:
         description: "upload the artifacts"
         required: false
-        type: bool
+        type: boolean
     outputs:
       artifact:
          description: "Artifacts of the Builder"
