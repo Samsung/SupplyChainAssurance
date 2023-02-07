@@ -33,7 +33,6 @@ jobs:
 
     permissions:
       id-token: write # Needed to detect the current reusable repository and ref.
-      contents: write
     runs-on: ubuntu-latest
 
     steps:
