@@ -24,7 +24,7 @@ runs:
         if [[ "${{ inputs.name }}" == "generator" ]]; then
           EXPECTED_HASH="09ff934714d0b8ff1f39d7e64a975f0bb88718cbcb2395425b35fc606f4f73d8"
         elif [[ "${{ inputs.name }}" == "verifier" ]]; then
-          EXPECTED_HASH="8d4f98caed3209d40fc4140c5c51e84184a1310a4abe2b2b6b6525ffde7eb9fd"
+          EXPECTED_HASH="ebd660a4e34060db3259cb2408434bf20f459e6b8e3bbb050424d108b5317454"
         fi
         COMPUTED_HASH=$(sha256sum scia_tool/${{ inputs.name }}/${{ inputs.name }} | awk '{print $1}')
         set -euo pipefail

@@ -18,8 +18,6 @@ runs:
       GITHUB_TOKEN: ${{ env.GITHUBTOKEN }}
     run : |
       SUBJECTS=$(echo ${{ inputs.artifacts}} | base64 -d)
-      echo $SUBJECTS
-      echo $GITHUB_TOKEN
       assets=()
       for sub in $SUBJECTS
       do
@@ -36,6 +34,4 @@ runs:
       done
 
       tag_name=${GITHUB_REF##*/}
-      echo "$tag_name"
-      echo "${assets[@]}"
       hub release edit "${assets[@]}" -m "" "$tag_name"

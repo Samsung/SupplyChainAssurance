@@ -33,20 +33,19 @@ jobs:
 
     permissions:
       id-token: write # Needed to detect the current reusable repository and ref.
-      contents: write
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v3
 
     - name: Download Artifact
-      uses: samsung/supplychainassurance/.github/actions/download-artifact@v1.0.1
+      uses: samsung/supplychainassurance/.github/actions/download-artifact@v1.0.2
       id: download
       with:
         hash: ${{ inputs.hash }}
 
     - name: Download Generator
-      uses: samsung/supplychainassurance/.github/actions/download-tool@v1.0.1
+      uses: samsung/supplychainassurance/.github/actions/download-tool@v1.0.2
       with:
         name : "generator"
         token: "${{ secrets.ECODETOKEN }}"
@@ -83,12 +82,12 @@ jobs:
     steps:
     - name: Download Artifact
       id: download
-      uses: samsung/supplychainassurance/.github/actions/download-artifact@v1.0.1
+      uses: samsung/supplychainassurance/.github/actions/download-artifact@v1.0.2
       with:
         hash: ${{ needs.GenerateProvenance.outputs.hash }}
 
     - name: Download Verifier
-      uses: samsung/supplychainassurance/.github/actions/download-tool@v1.0.1
+      uses: samsung/supplychainassurance/.github/actions/download-tool@v1.0.2
       with:
         name : "verifier"
         token: "${{ secrets.ECODETOKEN }}"
@@ -98,7 +97,7 @@ jobs:
         WORKSPACE: "/workspace"
 
       run : |
-        EXPECTED_BUILDERID="https://github.com/samsung/supplychainassurance/.github/workflows/slsa_release.yml@refs/tags/v1.0.1"
+        EXPECTED_BUILDERID="https://github.com/samsung/supplychainassurance/.github/workflows/slsa_release.yml@refs/tags/v1.0.2"
         VOLUMECMD="-v ${{ github.workspace }}/${{ steps.download.outputs.outdir }}:$WORKSPACE"
         ENVCMD="-e WORKSPACE=$WORKSPACE"
         DATAS=$(echo "repository:${{ secrets.EXPECTED_REPOSITORY }} builderid:$EXPECTED_BUILDERID" | base64 -w0)
@@ -106,7 +105,7 @@ jobs:
         cat ${{ steps.download.outputs.outdir }}/scia-progress.json
 
     - name: Download Uploader
-      uses: samsung/supplychainassurance/.github/actions/download-tool@v1.0.1
+      uses: samsung/supplychainassurance/.github/actions/download-tool@v1.0.2
       with:
         name : "generator"
         token: "${{ secrets.ECODETOKEN }}"
