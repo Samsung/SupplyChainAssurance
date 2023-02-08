@@ -26,7 +26,7 @@ on:
 
 jobs:
   Builder:
-    uses: samsung/supplychainassurance/.github/workflows/python_builder.yml@v1.0.1
+    uses: samsung/supplychainassurance/.github/workflows/python_builder.yml@seperate-builder
     with:
       version: "${{ inputs.version }}"
       upload: true
@@ -36,7 +36,7 @@ jobs:
     permissions:
       id-token: write
       contents: write
-    uses: samsung/supplychainassurance/.github/workflows/slsa_release.yml@v1.0.1
+    uses: samsung/supplychainassurance/.github/workflows/slsa_release.yml@seperate-builder
     with:
       hash: "${{ needs.Builder.outputs.hash }}"
       artifact: "${{ needs.Builder.outputs.artifact }}"
