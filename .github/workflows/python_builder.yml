@@ -16,6 +16,9 @@ on:
       hash:
          description: "Hash of the Artifacts"
          value: ${{ jobs.Builder.outputs.hash }}
+      build_command:
+         description: "Build command used in Builder"
+         value: ${{ jobs.Builder.outputs.build_command }}
 
 jobs:
   Builder:
